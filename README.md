@@ -9,7 +9,7 @@
 
 仿真波形：
 
-![wave](https://raw.githubusercontent.com/Verdvana/Enc8b10b/master/Simulation/enc8b10b_TB/wave.jpg)
+![wave](https://raw.githubusercontent.com/Verdvana/Enc8b10b/V1.1/Simulation/enc8b10b_TB/wave.jpg)
 
 
 | Flow Summary | Content |
@@ -39,7 +39,7 @@
 
 仿真波形：
 
-![wave](https://raw.githubusercontent.com/Verdvana/Enc8b10b/master/Simulation/enc8b10b_TB/wave2.jpg)
+![wave](https://raw.githubusercontent.com/Verdvana/Enc8b10b/V1.1/Simulation/enc8b10b_TB/wave2.jpg)
 
 
 | Flow Summary | Content |
