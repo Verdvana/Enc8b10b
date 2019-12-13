@@ -8,6 +8,7 @@
 //
 //Version 	Design		Coding		Simulata	  Review		Rel data
 //V1.0		Verdvana	Verdvana	Verdvana		  			2019-12-13
+//V1.1		Verdvana	Verdvana	Verdvana		  			2019-12-13
 //
 //-----------------------------------------------------------------------------------
 //
@@ -16,6 +17,9 @@
 //          一个时钟周期出结果；
 //          先进行5B/6B编码，并更新RD信号，
 //			再根据更新后的RD信号进行3B/4B编码，且产生下次编码的RD信号。
+//
+//V1.1		根据Synopsys的IP手册规范引脚名称，且添加使能信号。
+//
 //-----------------------------------------------------------------------------------
 
 `timescale 1ns/1ns
@@ -25,11 +29,12 @@ module enc8b10b(
 	input           clk,        //时钟
     input           rst_n,      //复位
     //*******控制/数据信号*******//
-    input           kd,         //控制为1，数据为0
+    input           enable,     //使能
+    input           k_char,     //控制为1，数据为0
     //***运行不一致性（RD）信号***//
-    input           rd_init,    //RD初始化，通常为0
-    input           rd_in,      //RD输入，连接上次转码的RD输出
-    output          rd_out,     //RD输出，连接下次转码的RD输入
+    input           init_rd_n,  //RD初始化，通常为0
+    input           init_rd_val,//RD输入，连接上次转码的RD输出
+    output          rd,         //RD输出，连接下次转码的RD输入
     //********数据输入输出*******//
     input  [7:0]    data_in,    //8bit数据输入
     output [9:0]    data_out    //10bit数据输出
@@ -43,7 +48,7 @@ module enc8b10b(
 
     //===================================================================
     //RD临时信号1生产
-    assign rd_temp1 = rd_init ? (rd_init&rd_in) : (rd_init|rd_in);
+    assign rd_temp1 = init_rd_n ? (init_rd_n&init_rd_val) : (init_rd_n|init_rd_val);
 
     //===================================================================
     //编码
@@ -58,7 +63,7 @@ module enc8b10b(
             x <= '0;
             rd_temp2 <= '0;
         end
-        else begin 
+        else if(enable)begin 
             case(data_in[4:0])
                 5'b00000:   if(rd_temp1) begin  //如果rd为1，下次编码rd为0，下同
                                 x <= 6'b011000;
@@ -216,7 +221,7 @@ module enc8b10b(
                                 x <= 6'b110110;
                                 rd_temp2 <= '1;
                             end
-                5'b11100:   case(kd)
+                5'b11100:   case(k_char)
                                 1'b0: begin
                                     x <= 6'b001110;
                                     rd_temp2 <= rd_temp1;
@@ -262,6 +267,10 @@ module enc8b10b(
                             end
             endcase
         end
+        else begin
+            x <= '0;
+            rd_temp2 <= '0;
+        end
     end
     
     //-------------------------------------------------------------------
@@ -274,8 +283,8 @@ module enc8b10b(
             y <= '0;
             rd_temp3 <= '0;
         end
-        else begin
-            case(kd)                                //判断是否为控制信号，1为是
+        else if(enable)begin
+            case(k_char)                                //判断是否为控制信号，1为是
                 1'b0:   begin
                     case(data_in[7:5])
                         3'b000: if(rd_temp2) begin
@@ -422,6 +431,10 @@ module enc8b10b(
                 end        
             endcase
         end
+        else begin
+            y <= '0;
+            rd_temp3 <= '0;
+        end
     end
 
     //===================================================================
@@ -433,16 +446,20 @@ module enc8b10b(
             data_out_r <= '0;
             rd_temp4 <= '0;
         end
-        else begin
+        else if(enable)begin
             data_out_r <= {x,y};
             rd_temp4 <= rd_temp3;
+        end
+        else begin
+            data_out_r <= '0;
+            rd_temp4 <= '0;
         end
     end
     
     //===================================================================
     //输出
-        
-    assign rd_out = rd_temp4;
+
+    assign rd = rd_temp4;
     assign data_out =  data_out_r;
 
 endmodule
